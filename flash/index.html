@@ -13,7 +13,7 @@
   </head>
   <body>
     <main class="page">
-      <p class="eyebrow">ESP32-WROOM-32 · DevKit USB-C (CH340)</p>
+      <p class="eyebrow">ESP32-WROOM-32 · DevKit USB-C (CP2102)</p>
       <h1>Installer Wi-Fi Radar</h1>
       <p class="lead">
         Cette page installe le microprogramme sur votre carte, depuis un ordinateur Ubuntu,
@@ -27,8 +27,10 @@
           <button slot="activate" type="button" class="install-btn">Installer le microprogramme</button>
         </esp-web-install-button>
         <p class="hint" id="browser-hint">
-          Utilisez Chrome ou Edge sur l’ordinateur. Le bouton ne fonctionne pas dans Firefox
-          ni sur le téléphone.
+          Utilisez Google Chrome (paquet .deb) ou Edge sur l’ordinateur. Le bouton ne fonctionne
+          pas dans Firefox, ni dans Chromium installé en snap (« Failed to initialize »),
+          ni sur le téléphone. Autre solution qui marche :
+          <code>esptool.py --no-stub write_flash -fm dio -fs 4MB 0x0 wifi-radar-esp32.bin</code>
         </p>
       </section>
 
@@ -44,7 +46,7 @@
           <p>Fermez la session puis reconnectez-vous (ou redémarrez) pour que le groupe s’applique.</p>
           <p>
             Si le port n’apparaît pas et que vous avez le paquet <strong>brltty</strong>, il peut
-            s’emparer de la puce CH340. Retirez-le seulement si vous n’utilisez pas de plage braille :
+            gêner le port série. Retirez-le seulement si vous n’utilisez pas de plage braille :
           </p>
           <pre><code>sudo apt remove brltty</code></pre>
         </li>
@@ -52,7 +54,7 @@
           <h2>3. Brancher la carte</h2>
           <p>
             Branchez l’ESP32 au PC avec le câble USB-C. Dans la liste des ports, choisissez
-            celui qui ressemble à <code>ttyUSB0</code> ou mentionne <strong>CH340</strong>.
+            celui qui ressemble à <code>ttyUSB0</code> ou mentionne <strong>CP2102</strong> (Silicon Labs).
           </p>
         </li>
         <li>

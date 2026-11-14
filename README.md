@@ -10,7 +10,7 @@ Application web mobile (PWA) et microprogramme ESP32 pour voir, en direct, la **
 
 ## État
 
-Version 1. L’app en ligne fonctionne en **mode simulé**. Le microprogramme pour un **ESP32-WROOM-32 DevKit** (USB-C, puce série CH340) a été **compilé, mais n’a pas été essayé sur une vraie carte**.
+Version 1. L’app en ligne fonctionne en **mode simulé**. Le microprogramme pour un **ESP32-WROOM-32 DevKit** (USB-C, puce série CP2102) : v1.0.1 corrige le redémarrage en boucle vu sur la vraie carte (serveur lancé avant le Wi-Fi). À revérifier sur la carte.
 
 ## Fonctions
 
@@ -43,12 +43,12 @@ GitHub Pages force le HTTPS. Un navigateur bloque alors une connexion `ws://` ve
 
 ## Installer le microprogramme
 
-Carte visée : ESP32-WROOM-32 DevKit, connecteur USB-C, puce USB-série **CH340**.
+Carte visée : ESP32-WROOM-32 DevKit, connecteur USB-C, puce USB-série **CP2102** (carte réelle : ESP32-D0WD-V3 rév. 3.1).
 
 1. Sur l’ordinateur Ubuntu, ouvrez [la page d’installation](https://passcool17.github.io/wifi-radar/flash/) dans **Chrome** ou **Edge**.
 2. Une seule fois : `sudo usermod -a -G dialout $USER`, puis fermez la session et reconnectez-vous.
 3. Si le port n’apparaît pas et que `brltty` est installé (et que vous n’utilisez pas de plage braille) : `sudo apt remove brltty`.
-4. Branchez la carte avec un câble USB-C **données**, cliquez sur **Installer le microprogramme**, choisissez le port `ttyUSB0` / CH340. Si ça échoue, maintenez **BOOT** et réessayez.
+4. Branchez la carte avec un câble USB-C **données**, cliquez sur **Installer le microprogramme**, choisissez le port `ttyUSB0` / CP2102. Si ça échoue, maintenez **BOOT** et réessayez.
 5. Avec le téléphone, joignez le réseau **WiFi-Radar-Setup**, ouvrez la page de configuration (ou http://192.168.4.1/setup), entrez le Wi-Fi de la maison. Le mot de passe reste dans la carte (NVS). Il n’est jamais écrit dans les journaux série, ni dans ce dépôt.
 6. Revenez sur votre Wi-Fi, puis ouvrez http://wifi-radar.local (ou l’IP affichée à 115200 bauds).
 7. Pour recommencer la configuration : laissez le bouton **BOOT** enfoncé 3 secondes, ou utilisez **Reconfigurer le Wi-Fi** dans les réglages de l’app servie par la carte.

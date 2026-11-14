@@ -70,14 +70,15 @@ static bool loadCredentials(String &ssid, String &pass) {
 static void startSetupAp() {
   setupMode = true;
   staReady = false;
-  csiMotionEnd();
   WiFi.persistent(false);
   WiFi.mode(WIFI_AP);
+  csiMotionEnd();
   WiFi.softAP(kApSsid);
   delay(100);
   const IPAddress ip = WiFi.softAPIP();
   dns.start(53, "*", ip);
   httpWsSetSetupMode(true);
+  httpWsBegin();
   Serial.print("Setup AP started: ");
   Serial.print(kApSsid);
   Serial.print("  http://");
@@ -102,6 +103,7 @@ static void startStation(const String &ssid, const String &pass) {
 static void onStaConnected() {
   staReady = true;
   httpWsSetSetupMode(false);
+  httpWsBegin();
   Serial.print("Wi-Fi connected, IP ");
   Serial.println(WiFi.localIP());
 
@@ -128,7 +130,8 @@ void setup() {
     Serial.println("LittleFS mount failed (web files missing?)");
   }
 
-  httpWsBegin();
+  // httpWsBegin() is called only after WiFi.mode(): the lwIP/tcpip stack
+  // must exist before NetworkServer::begin() opens a socket.
 
   String ssid, pass;
   const bool have = loadCredentials(ssid, pass);

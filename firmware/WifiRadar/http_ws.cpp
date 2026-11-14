@@ -328,6 +328,9 @@ static void sendWsText(WiFiClient &c, const char *json) {
 }
 
 void httpWsBegin() {
+  static bool started = false;
+  if (started) return;
+  started = true;
   sServer.begin();
   sServer.setNoDelay(true);
 }
