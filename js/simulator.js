@@ -8,18 +8,18 @@ export const LOOP_MS = 90_000;
  * Idle noise, person walks in, sits, then leaves.
  */
 export const KEYFRAMES = [
-  { t: 0, presence: false, motion: 2, rssi: -74, bearing: null },
-  { t: 14000, presence: false, motion: 3, rssi: -73, bearing: null },
-  { t: 15500, presence: true, motion: 48, rssi: -64, bearing: 38 },
-  { t: 20000, presence: true, motion: 74, rssi: -55, bearing: 70 },
-  { t: 26000, presence: true, motion: 16, rssi: -58, bearing: 86 },
-  { t: 34000, presence: true, motion: 7, rssi: -59, bearing: 90 },
-  { t: 50000, presence: true, motion: 9, rssi: -59, bearing: 92 },
-  { t: 56000, presence: true, motion: 54, rssi: -54, bearing: 118 },
-  { t: 64000, presence: true, motion: 68, rssi: -62, bearing: 168 },
-  { t: 70000, presence: false, motion: 14, rssi: -70, bearing: 210 },
-  { t: 76000, presence: false, motion: 3, rssi: -74, bearing: null },
-  { t: 90000, presence: false, motion: 2, rssi: -74, bearing: null },
+  { t: 0, presence: false, motion: 2, rssi: -74, bearing: null, pir: false },
+  { t: 14000, presence: false, motion: 3, rssi: -73, bearing: null, pir: false },
+  { t: 15500, presence: true, motion: 48, rssi: -64, bearing: 38, pir: true },
+  { t: 20000, presence: true, motion: 74, rssi: -55, bearing: 70, pir: true },
+  { t: 26000, presence: true, motion: 16, rssi: -58, bearing: 86, pir: true },
+  { t: 34000, presence: true, motion: 7, rssi: -59, bearing: 90, pir: true },
+  { t: 50000, presence: true, motion: 9, rssi: -59, bearing: 92, pir: true },
+  { t: 56000, presence: true, motion: 54, rssi: -54, bearing: 118, pir: true },
+  { t: 64000, presence: true, motion: 68, rssi: -62, bearing: 168, pir: true },
+  { t: 70000, presence: false, motion: 14, rssi: -70, bearing: 210, pir: true },
+  { t: 76000, presence: false, motion: 3, rssi: -74, bearing: null, pir: false },
+  { t: 90000, presence: false, motion: 2, rssi: -74, bearing: null, pir: false },
 ];
 
 export function loopTime(elapsedMs) {
@@ -55,6 +55,7 @@ export function sampleAt(elapsedMs, wallMs, opts = {}) {
   let motion = lerp(a.motion, b.motion, s);
   let rssi = lerp(a.rssi, b.rssi, s);
   const presence = u < 0.5 ? a.presence : b.presence;
+  const pir = Boolean(u < 0.5 ? a.pir : b.pir);
   let bearing;
   if (a.bearing != null && b.bearing != null) {
     // shortest-path interpolation is unnecessary here; bearings only increase
@@ -70,14 +71,36 @@ export function sampleAt(elapsedMs, wallMs, opts = {}) {
     motion += (n1 - 0.5) * (presence ? 4.2 : 2.2);
     rssi += (n2 - 0.5) * 1.6;
   }
+  const recentPir = pir || pirRecently(t, 5000);
   const sample = {
     t: wallMs,
     rssi: Math.round(rssi * 10) / 10,
     motion: Math.round(clamp(motion, 0, 100) * 10) / 10,
     presence,
+    pir,
+    confirmed: Boolean(presence && recentPir),
   };
   if (bearing != null) sample.bearing = bearing;
   return sample;
+}
+
+function pirAt(loopT) {
+  const t = loopTime(loopT);
+  let i = 0;
+  while (i < KEYFRAMES.length - 1 && KEYFRAMES[i + 1].t <= t) i += 1;
+  const a = KEYFRAMES[i];
+  const b = KEYFRAMES[Math.min(i + 1, KEYFRAMES.length - 1)];
+  const span = Math.max(1, b.t - a.t);
+  const u = clamp((t - a.t) / span, 0, 1);
+  return Boolean(u < 0.5 ? a.pir : b.pir);
+}
+
+function pirRecently(loopT, windowMs) {
+  if (pirAt(loopT)) return true;
+  for (let back = 200; back <= windowMs; back += 200) {
+    if (pirAt(loopT - back)) return true;
+  }
+  return false;
 }
 
 /**

@@ -9,6 +9,7 @@ import {
   isMixedContent,
   isEspHost,
   clamp,
+  optionalBool,
 } from '../js/samples.js';
 
 let passed = 0;
@@ -125,6 +126,54 @@ test('flags mixed content on HTTPS pages', () => {
   assert.equal(isMixedContent('ws://192.168.1.50/ws', pages), true);
   assert.equal(isMixedContent('ws://wifi-radar.local/ws', esp), false);
   assert.equal(isMixedContent('', pages), false);
+});
+
+test('keeps optional pir, confirmed and mute', () => {
+  const r = parseSample({
+    t: 1731600000000,
+    rssi: -62,
+    motion: 41,
+    presence: true,
+    pir: true,
+    confirmed: true,
+    mute: false,
+  });
+  assert.equal(r.ok, true);
+  assert.equal(r.sample.pir, true);
+  assert.equal(r.sample.confirmed, true);
+  assert.equal(r.sample.mute, false);
+});
+
+test('accepts 0/1 and string booleans for pir and mute', () => {
+  const r = parseSample({ t: 1, rssi: -30, motion: 1, presence: true, pir: 1, confirmed: 'true', mute: 0 });
+  assert.equal(r.sample.pir, true);
+  assert.equal(r.sample.confirmed, true);
+  assert.equal(r.sample.mute, false);
+});
+
+test('old firmware without pir or confirmed still parses', () => {
+  const r = parseSample({ t: 1731600000000, rssi: -50, motion: 12, presence: false });
+  assert.equal(r.ok, true);
+  assert.equal(r.sample.presence, false);
+  assert.equal(r.sample.pir, undefined);
+  assert.equal(r.sample.confirmed, undefined);
+  assert.equal(r.sample.mute, undefined);
+});
+
+test('optionalBool ignores missing or invalid values', () => {
+  assert.equal(optionalBool({ pir: true }, 'pir'), true);
+  assert.equal(optionalBool({}, 'pir'), undefined);
+  assert.equal(optionalBool({ pir: 'maybe' }, 'pir'), undefined);
+});
+
+test('loads and keeps the mute setting', () => {
+  const s = loadSettings({ source: 'sim', ip: '', port: '80', mute: true }, pages);
+  assert.equal(s.mute, true);
+  const d = defaultSettings(pages);
+  assert.equal(d.mute, false);
+  const forced = loadSettings({ source: 'sim', mute: true }, lan);
+  assert.equal(forced.source, 'esp32');
+  assert.equal(forced.mute, true);
 });
 
 console.log(`${passed} passed, ${failed} failed`);

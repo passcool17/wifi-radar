@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#05070a" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="Brancher l’écran, le buzzer et le capteur PIR sur l’ESP32 du Wi-Fi Radar." />
+    <title>Câblage — Wi-Fi Radar</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        --bg: #05070a;
+        --ink: #e7f3ec;
+        --dim: #9bb5a6;
+        --line: rgba(120, 200, 160, 0.16);
+        --ok: #5ee8a0;
+        --amber: #e0b15a;
+        --safe-t: env(safe-area-inset-top, 0px);
+        --safe-b: env(safe-area-inset-bottom, 0px);
+        --safe-l: env(safe-area-inset-left, 0px);
+        --safe-r: env(safe-area-inset-right, 0px);
+        color-scheme: dark;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+        background: #05070a;
+        color: var(--ink);
+        line-height: 1.5;
+        padding: calc(1rem + var(--safe-t)) calc(1rem + var(--safe-r)) calc(2rem + var(--safe-b)) calc(1rem + var(--safe-l));
+      }
+      main { width: min(40rem, 100%); margin: 0 auto; }
+      .eyebrow { font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: #6c8578; }
+      h1 { font-size: 1.6rem; letter-spacing: -0.03em; margin: 0.2rem 0 1rem; }
+      h2 { font-size: 1.1rem; margin: 1.75rem 0 0.6rem; }
+      p, li { color: var(--dim); }
+      p strong, li strong { color: var(--ink); }
+      a { color: var(--ok); }
+      figure { margin: 1rem 0; }
+      figure img { width: 100%; height: auto; border-radius: 0.5rem; background: #f4f1e8; }
+      figcaption { font-size: 0.85rem; color: #6c8578; margin-top: 0.4rem; }
+      table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+      th, td { text-align: left; padding: 0.55rem 0.45rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { color: var(--ok); font-weight: 650; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+      .color { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; margin-right: 0.3rem; vertical-align: -0.05rem; }
+      ol, ul { padding-left: 1.2rem; }
+      li { margin: 0.35rem 0; }
+      .warn {
+        background: rgba(224, 177, 90, 0.1);
+        border-left: 3px solid var(--amber);
+        padding: 0.7rem 0.85rem;
+        color: var(--dim);
+        margin: 1rem 0;
+      }
+      .back { margin-top: 2rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">Wi-Fi Radar v1.1 · kit ELEGOO ESP-32</p>
+      <h1>Comment brancher l’écran, le buzzer et le capteur</h1>
+      <p>
+        Ce guide est pour le kit ELEGOO ESP-32 Super Starter (puce USB <strong>CP2102</strong>).
+        Vous n’avez pas besoin de souder : tout se fait sur une plaque d’essais (breadboard)
+        avec les fils fournis. L’ESP32 doit déjà avoir le microprogramme v1.1 installé
+        (voir la <a href="../flash/">page d’installation</a>).
+      </p>
+
+      <figure>
+        <img
+          src="./schema-cablage.png"
+          width="1200"
+          height="900"
+          alt="Schéma de câblage : l’écran OLED sur les broches 21 et 22, le buzzer sur la broche 25, le capteur PIR sur la broche 27, l’alimentation 3,3 V et 5 V, et une masse commune."
+        />
+        <figcaption>Schéma de câblage. Suivez les couleurs suggérées si vos fils le permettent ; l’important, c’est de relier les bonnes broches.</figcaption>
+      </figure>
+
+      <h2>Tableau des broches</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Pièce</th>
+            <th>Broche de la pièce</th>
+            <th>Broche de l’ESP32</th>
+            <th>Couleur suggérée</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Écran OLED 0,96 po (I2C)</td>
+            <td>VCC (parfois VIN)</td>
+            <td>3V3</td>
+            <td><span class="color" style="background:#d94a4a"></span>Rouge</td>
+          </tr>
+          <tr>
+            <td>Écran OLED</td>
+            <td>GND</td>
+            <td>GND</td>
+            <td><span class="color" style="background:#222"></span>Noir</td>
+          </tr>
+          <tr>
+            <td>Écran OLED</td>
+            <td>SDA</td>
+            <td>GPIO21 (SDA)</td>
+            <td><span class="color" style="background:#3b7ddd"></span>Bleu</td>
+          </tr>
+          <tr>
+            <td>Écran OLED</td>
+            <td>SCL</td>
+            <td>GPIO22 (SCL)</td>
+            <td><span class="color" style="background:#e0c14a"></span>Jaune</td>
+          </tr>
+          <tr>
+            <td>Buzzer (actif ou passif)</td>
+            <td>+ / I/O / SIG</td>
+            <td>GPIO25</td>
+            <td><span class="color" style="background:#e07a2f"></span>Orange</td>
+          </tr>
+          <tr>
+            <td>Buzzer</td>
+            <td>− / GND</td>
+            <td>GND</td>
+            <td><span class="color" style="background:#222"></span>Noir</td>
+          </tr>
+          <tr>
+            <td>Capteur PIR (HC-SR501)</td>
+            <td>VCC</td>
+            <td>5V ou VIN</td>
+            <td><span class="color" style="background:#d94a4a"></span>Rouge</td>
+          </tr>
+          <tr>
+            <td>Capteur PIR</td>
+            <td>GND</td>
+            <td>GND</td>
+            <td><span class="color" style="background:#222"></span>Noir</td>
+          </tr>
+          <tr>
+            <td>Capteur PIR</td>
+            <td>OUT</td>
+            <td>GPIO27</td>
+            <td><span class="color" style="background:#3cb56e"></span>Vert</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Étapes sur la plaque d’essais</h2>
+      <ol>
+        <li>Débranchez le câble USB de l’ESP32 avant de relier les fils. C’est plus sûr.</li>
+        <li>Posez la carte au centre de la plaque, les broches bien enfoncées de chaque côté. Les <strong>rails de masse</strong> (souvent le rail bleu, « − » ou GND) serviront à tous les modules.</li>
+        <li>Reliez un fil noir d’un <strong>GND</strong> de l’ESP32 vers le rail de masse. Tous les GND (écran, buzzer, capteur) iront sur ce même rail.</li>
+        <li>
+          <strong>Écran OLED.</strong> Lisez les inscriptions sur le module : l’ordre des 4 broches n’est pas toujours le même.
+          VCC va au <strong>3V3</strong>, GND au rail de masse, SDA à la broche <strong>21</strong>, SCL à la broche <strong>22</strong>.
+        </li>
+        <li>
+          <strong>Buzzer.</strong> Le côté « + » (souvent une patte plus longue, ou un « + » imprimé) va à la broche <strong>25</strong>.
+          L’autre côté va au rail de masse. Le kit contient un buzzer actif et un passif : les deux fonctionnent sur cette broche.
+        </li>
+        <li>
+          <strong>Capteur PIR.</strong> C’est le module rectangulaire avec la lentille blanche. Son <strong>VCC</strong> va au
+          <strong>5V</strong> (ou VIN) de l’ESP32, pas au 3,3 V. GND au rail de masse. OUT à la broche <strong>27</strong>.
+        </li>
+        <li>Vérifiez une dernière fois le tableau, puis rebranchez le USB. L’écran doit afficher « Wi-Fi Radar » puis l’adresse IP une fois le Wi-Fi joint. S’il n’y a pas d’écran, le radar continue de fonctionner dans l’app.</li>
+      </ol>
+
+      <h2>Erreurs fréquentes</h2>
+      <ul>
+        <li>Inverser <strong>SDA et SCL</strong> (21 et 22) : l’écran reste noir.</li>
+        <li>Se fier à une photo pour l’ordre des broches de l’OLED : lisez toujours les <strong>inscriptions</strong> sur le module.</li>
+        <li>Alimenter le PIR en 3,3 V : beaucoup de HC-SR501 ne démarrent pas correctement. Utilisez le <strong>5V / VIN</strong>.</li>
+        <li>Mettre du <strong>5 V sur une broche GPIO</strong> (21, 22, 25, 27, etc.) : ne le faites jamais. Seul le VCC du PIR va au 5 V. Sa sortie OUT reste à 3,3 V, c’est normal.</li>
+        <li>Oublier le fil de <strong>masse commun</strong> : rien ne se comporte comme prévu.</li>
+        <li>Inverser le buzzer : pas de son, ou un son très faible. Tournez le « + » vers la broche 25.</li>
+        <li>Ne pas utiliser les broches 0, 2, 12, 15, ni 6 à 11 : elles servent au démarrage ou à la mémoire flash.</li>
+      </ul>
+      <p class="warn">
+        Si un module est absent ou mal branché, le microprogramme ne doit pas se figer :
+        l’app et le Wi-Fi restent utilisables. L’écran simplement ne s’allume pas, et le PIR affiche « non ».
+      </p>
+
+      <p class="back">
+        <a href="../flash/">Page d’installation du microprogramme</a>
+        ·
+        <a href="../">Retour à l’app</a>
+      </p>
+    </main>
+  </body>
+</html>

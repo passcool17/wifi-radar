@@ -1,4 +1,4 @@
-const CACHE = 'wifi-radar-v1';
+const CACHE = 'wifi-radar-v1.1';
 const ASSETS = [
   './',
   './index.html',
@@ -14,6 +14,7 @@ const ASSETS = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   './manifest.webmanifest',
+  './cablage/index.html',
 ];
 
 self.addEventListener('install', (event) => {

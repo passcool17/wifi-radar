@@ -37,6 +37,9 @@ find "${DATA}" -type f \( -name '*.html' -o -name '*.css' -o -name '*.js' -o -na
 
 mkdir -p "${OUT}" "${FLASH}"
 
+echo "== Installing display libraries (no-op if already present)"
+arduino-cli lib install "Adafruit GFX Library" "Adafruit SSD1306" "Adafruit BusIO"
+
 echo "== Compiling ${FQBN}"
 arduino-cli compile \
   --fqbn "${FQBN}" \
@@ -78,7 +81,7 @@ import json, os
 flash = "${FLASH}"
 manifest = {
   "name": "Wi-Fi Radar",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "new_install_prompt_erase": True,
   "builds": [
     {

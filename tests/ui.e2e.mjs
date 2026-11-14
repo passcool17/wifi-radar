@@ -126,6 +126,18 @@ async function main() {
     await page.screenshot({ path: path.join(shots, 'presence-412x915.png'), fullPage: true });
   });
 
+  await check('PIR and Confirmé are shown in the sitting scene', async () => {
+    await page.waitForFunction(
+      () => {
+        const pir = document.getElementById('pir-line')?.textContent.trim();
+        const badge = document.getElementById('confirmed-badge');
+        return pir === 'PIR oui' && badge && !badge.hidden && badge.textContent.includes('Confirmé');
+      },
+      { timeout: 15000 },
+    );
+    await page.screenshot({ path: path.join(shots, 'v1.1-presence-pir-412x915.png'), fullPage: true });
+  });
+
   await check('radar sweep is animating', async () => {
     const changed = await page.evaluate(async () => {
       const canvas = document.getElementById('radar');
@@ -152,7 +164,9 @@ async function main() {
     await page.waitForSelector('#settings[open]');
     await page.fill('#set-ip', '192.168.1.42');
     await page.fill('#set-port', '80');
+    await page.check('#set-mute');
     await page.screenshot({ path: path.join(shots, 'settings.png'), fullPage: true });
+    await page.screenshot({ path: path.join(shots, 'v1.1-settings-mute.png'), fullPage: true });
     await page.click('#btn-close-settings');
     await page.click('#src-esp');
     await page.waitForTimeout(200);
@@ -162,11 +176,14 @@ async function main() {
     const parsed = JSON.parse(source);
     if (parsed.source !== 'esp32') throw new Error(`source=${parsed.source}`);
     if (parsed.ip !== '192.168.1.42') throw new Error(`ip=${parsed.ip}`);
+    if (parsed.mute !== true) throw new Error(`mute=${parsed.mute}`);
     await page.click('#btn-settings');
     await page.waitForSelector('#settings[open]');
     const ip = await page.inputValue('#set-ip');
     const port = await page.inputValue('#set-port');
+    const mute = await page.isChecked('#set-mute');
     if (ip !== '192.168.1.42' || port !== '80') throw new Error(`form ${ip}:${port}`);
+    if (!mute) throw new Error('mute checkbox not checked after reload');
     await page.click('#btn-close-settings');
     // restore sim so later tests stay quiet
     await page.click('#src-sim');
@@ -221,6 +238,24 @@ async function main() {
     await flashPage.waitForTimeout(400);
     if (flashErrors.length) throw new Error(flashErrors.join('\n'));
     await flashPage.screenshot({ path: path.join(shots, 'flash-1280x800.png'), fullPage: true });
+  });
+
+  await check('wiring guide loads at 412x915 with the diagram', async () => {
+    const cabErrors = [];
+    const cab = await context.newPage();
+    cab.on('pageerror', (err) => cabErrors.push(String(err)));
+    const res = await cab.goto(`${base}/cablage/`, { waitUntil: 'networkidle', timeout: 45000 });
+    if (!res || !res.ok()) throw new Error(`HTTP ${res && res.status()}`);
+    await cab.waitForSelector('h1');
+    const title = await cab.locator('h1').innerText();
+    if (!title.toLowerCase().includes('brancher')) throw new Error(title);
+    const img = cab.locator('img[src*="schema-cablage"]');
+    if ((await img.count()) < 1) throw new Error('missing diagram');
+    const imgRes = await cab.request.get(`${base}/cablage/schema-cablage.png`);
+    if (!imgRes.ok()) throw new Error(`diagram HTTP ${imgRes.status()}`);
+    if (cabErrors.length) throw new Error(cabErrors.join('\n'));
+    await cab.screenshot({ path: path.join(shots, 'v1.1-cablage-412x915.png'), fullPage: true });
+    await cab.close();
   });
 
   await browser.close();

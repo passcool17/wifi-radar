@@ -36,6 +36,7 @@ function writeStoredSettings(settings) {
     ip: settings.ip,
     port: settings.port,
     path: settings.path || '/ws',
+    mute: Boolean(settings.mute),
   };
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(stored));
 }
@@ -69,6 +70,10 @@ const els = {
   btnCloseSettings: document.getElementById('btn-close-settings'),
   flashLink: document.getElementById('flash-link'),
   resetWifi: document.getElementById('reset-wifi'),
+  pirLine: document.getElementById('pir-line'),
+  confirmedBadge: document.getElementById('confirmed-badge'),
+  setMute: document.getElementById('set-mute'),
+  cablageLink: document.getElementById('cablage-link'),
 };
 
 let settings = readStoredSettings();
@@ -124,12 +129,15 @@ function refreshSettingsForm() {
   els.wsPreview.textContent = url || 'ws://…/ws';
   const mixed = isMixedContent(url);
   els.mixedNote.hidden = !mixed;
+  if (els.setMute) els.setMute.checked = Boolean(settings.mute);
   if (isEspHost()) {
     els.flashLink.hidden = true;
     els.resetWifi.hidden = false;
+    if (els.cablageLink) els.cablageLink.hidden = false;
   } else {
     els.flashLink.hidden = false;
     els.resetWifi.hidden = true;
+    if (els.cablageLink) els.cablageLink.hidden = true;
   }
 }
 
@@ -167,6 +175,19 @@ function applySample(sample) {
   const rssi = Number.isFinite(sample.rssi) ? Math.round(sample.rssi) : '—';
   els.rssi.textContent = `Signal ${rssi} dBm`;
 
+  if (sample.pir === true) els.pirLine.textContent = 'PIR oui';
+  else if (sample.pir === false) els.pirLine.textContent = 'PIR non';
+  else els.pirLine.textContent = 'PIR —';
+
+  const confirmed = sample.confirmed === true;
+  els.confirmedBadge.hidden = !confirmed;
+
+  if (typeof sample.mute === 'boolean' && sample.mute !== settings.mute) {
+    settings.mute = sample.mute;
+    writeStoredSettings(settings);
+    if (els.setMute) els.setMute.checked = sample.mute;
+  }
+
   const ev = detector.observe(sample);
   if (ev) pushLog(ev, sample.t);
 }
@@ -182,7 +203,10 @@ function startSource() {
   graph.reset();
   els.log.replaceChildren();
   logEntries.length = 0;
-  sources.start(settings.source, { url: currentWsUrl() });
+  sources.start(settings.source, {
+    url: currentWsUrl(),
+    hello: { cmd: 'mute', v: Boolean(settings.mute) },
+  });
 }
 
 function setSource(kind) {
@@ -251,6 +275,14 @@ els.resetWifi.addEventListener('click', async () => {
     /* the board may reboot before answering */
   }
 });
+
+if (els.setMute) {
+  els.setMute.addEventListener('change', () => {
+    settings.mute = els.setMute.checked;
+    writeStoredSettings(settings);
+    sources.send({ cmd: 'mute', v: settings.mute });
+  });
+}
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   navigator.serviceWorker.register('./sw.js').catch(() => undefined);

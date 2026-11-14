@@ -33,10 +33,16 @@ export function createSourceManager(opts) {
     const source = createEsp32Source({
       url: settings.url,
       onStatus: opts.onStatus,
+      hello: settings.hello,
     });
     active = source;
     source.start(opts.onSample);
   }
 
-  return { start, stop, kind: () => kind };
+  function send(payload) {
+    if (active && typeof active.send === 'function') return active.send(payload);
+    return false;
+  }
+
+  return { start, stop, send, kind: () => kind };
 }

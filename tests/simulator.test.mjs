@@ -85,5 +85,28 @@ test('createSimulator emits samples and can be stopped', async () => {
   assert.equal(samples[0].presence, true);
 });
 
+test('idle phase has no PIR and is not confirmed', () => {
+  const s = sampleAt(2000, 1_000_000, { noise: false });
+  assert.equal(s.pir, false);
+  assert.equal(s.confirmed, false);
+});
+
+test('sitting scene has PIR and is confirmed', () => {
+  const s = sampleAt(sceneOffset('presence'), 1, { noise: false });
+  assert.equal(s.presence, true);
+  assert.equal(s.pir, true);
+  assert.equal(s.confirmed, true);
+});
+
+test('confirmed stays true for a few seconds after PIR falls', () => {
+  // After t=76000 PIR is false; presence is already false so confirmed is false.
+  // Just after a presence+PIR window, confirmed follows presence && recent PIR.
+  const sitting = sampleAt(34000, 1, { noise: false });
+  assert.equal(sitting.confirmed, true);
+  const idle = sampleAt(80000, 1, { noise: false });
+  assert.equal(idle.presence, false);
+  assert.equal(idle.confirmed, false);
+});
+
 console.log(`${passed} passed, ${failed} failed`);
 if (failed) process.exitCode = 1;

@@ -54,6 +54,13 @@ export function createEsp32Source(opts) {
     ws.addEventListener('open', () => {
       delay = 1000;
       setState('connected', 'Connecté');
+      if (opts.hello) {
+        try {
+          ws.send(typeof opts.hello === 'string' ? opts.hello : JSON.stringify(opts.hello));
+        } catch {
+          /* ignore */
+        }
+      }
     });
     ws.addEventListener('message', (ev) => {
       const parsed = parseSample(typeof ev.data === 'string' ? ev.data : String(ev.data));
@@ -73,7 +80,18 @@ export function createEsp32Source(opts) {
     });
   }
 
+  function send(payload) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+    try {
+      ws.send(typeof payload === 'string' ? payload : JSON.stringify(payload));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   return {
+    send,
     start(handler) {
       stopped = false;
       onSample = handler;

@@ -1,8 +1,26 @@
-/** @typedef {{ t: number, rssi: number, motion: number, presence: boolean, bearing?: number }} Sample */
+
+/**
+ * Coerce an optional JSON boolean. Missing or invalid values yield undefined
+ * so older firmware (no pir/confirmed/mute) stays compatible.
+ * @param {Record<string, unknown>} raw
+ * @param {string} key
+ * @returns {boolean | undefined}
+ */
+export function optionalBool(raw, key) {
+  if (!raw || !Object.prototype.hasOwnProperty.call(raw, key)) return undefined;
+  let value = raw[key];
+  if (value === 0 || value === 1 || value === '0' || value === '1') {
+    value = Boolean(Number(value));
+  }
+  if (value === 'true' || value === 'false') value = value === 'true';
+  return typeof value === 'boolean' ? value : undefined;
+}
+
+/** @typedef {{ t: number, rssi: number, motion: number, presence: boolean, bearing?: number, pir?: boolean, confirmed?: boolean, mute?: boolean }} Sample */
 
 /**
  * Parse and validate a CSI sample. Accepts an object or a JSON string.
- * Shape: { t, rssi, motion, presence } with optional bearing.
+ * Shape: { t, rssi, motion, presence } with optional bearing, pir, confirmed, mute.
  * @param {unknown} input
  * @returns {{ ok: true, sample: Sample } | { ok: false, error: string }}
  */
@@ -47,6 +65,12 @@ export function parseSample(input) {
   if (raw.bearing !== undefined && raw.bearing !== null && Number.isFinite(Number(raw.bearing))) {
     sample.bearing = ((Number(raw.bearing) % 360) + 360) % 360;
   }
+  const pir = optionalBool(raw, 'pir');
+  const confirmed = optionalBool(raw, 'confirmed');
+  const mute = optionalBool(raw, 'mute');
+  if (pir !== undefined) sample.pir = pir;
+  if (confirmed !== undefined) sample.confirmed = confirmed;
+  if (mute !== undefined) sample.mute = mute;
   return { ok: true, sample };
 }
 
@@ -117,9 +141,10 @@ export function defaultSettings(loc = typeof location !== 'undefined' ? location
       ip: loc.hostname,
       port: loc.port || '80',
       path: '/ws',
+      mute: false,
     };
   }
-  return { source: 'sim', ip: '', port: '80', path: '/ws' };
+  return { source: 'sim', ip: '', port: '80', path: '/ws', mute: false };
 }
 
 /**
@@ -135,11 +160,12 @@ export function loadSettings(raw, loc = typeof location !== 'undefined' ? locati
   let port = typeof data.port === 'string' || typeof data.port === 'number' ? String(data.port).trim() : base.port;
   if (!/^\d{1,5}$/.test(port)) port = base.port;
   const path = typeof data.path === 'string' && data.path.startsWith('/') ? data.path : base.path;
+  const mute = typeof data.mute === 'boolean' ? data.mute : base.mute;
   // When the page itself is served by the ESP32, always prefer the same host.
   if (loc && isEspHost(loc)) {
-    return { source: 'esp32', ip: loc.hostname, port: loc.port || '80', path: '/ws' };
+    return { source: 'esp32', ip: loc.hostname, port: loc.port || '80', path: '/ws', mute };
   }
-  return { source, ip, port, path };
+  return { source, ip, port, path, mute };
 }
 
 export function websocketUrl(settings) {

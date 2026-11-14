@@ -50,6 +50,10 @@
             <span id="presence-text">non</span>
           </p>
           <p class="sub" id="rssi">Signal — dBm</p>
+          <div class="confirm-row">
+            <p class="sub" id="pir-line">PIR —</p>
+            <p class="badge" id="confirmed-badge" hidden>Confirmé</p>
+          </div>
         </article>
         <article class="stat">
           <h2>Mouvement</h2>
@@ -109,10 +113,20 @@
           l’ESP32, ouvrez l’app depuis un serveur HTTP sur le réseau, ou faites servir une copie
           de l’app par l’ESP32 lui-même (voir le fichier README).
         </p>
+        <div class="switch-row">
+          <input type="checkbox" id="set-mute" name="mute" role="switch" switch />
+          <label for="set-mute">Couper le son du buzzer</label>
+        </div>
         <p class="note" id="flash-link">
           Pour installer le microprogramme, ouvrez
           <a href="./flash/">la page d’installation</a>
           depuis un ordinateur, avec Chrome ou Edge.
+          Le branchement de l’écran, du buzzer et du capteur PIR est expliqué dans
+          <a href="./cablage/">le guide de câblage</a>.
+        </p>
+        <p class="note" id="cablage-link" hidden>
+          Guide de câblage :
+          <a href="https://passcool17.github.io/wifi-radar/cablage/">passcool17.github.io/wifi-radar/cablage/</a>
         </p>
         <button type="button" class="ghost" id="reset-wifi" hidden>Reconfigurer le Wi-Fi</button>
         <button type="button" class="ghost" id="btn-close-settings">Fermer</button>

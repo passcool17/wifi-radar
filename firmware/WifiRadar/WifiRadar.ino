@@ -1,6 +1,7 @@
 /*
  * Wi-Fi Radar — ESP32-WROOM-32
- * Serves the radar PWA over HTTP and streams {t,rssi,motion,presence} on /ws.
+ * Serves the radar PWA over HTTP and streams
+ * {t,rssi,motion,presence,pir,confirmed,mute} on /ws.
  * Wi-Fi credentials are entered on a captive portal, stored in NVS, and
  * never written to the serial log.
  *
@@ -16,6 +17,7 @@
 
 #include "csi_motion.h"
 #include "http_ws.h"
+#include "peripherals.h"
 
 static const char *kApSsid = "WiFi-Radar-Setup";
 static const char *kMdns = "wifi-radar";
@@ -31,12 +33,16 @@ static bool staReady = false;
 static bool resetRequested = false;
 static uint32_t bootPressedAt = 0;
 static uint32_t lastSample = 0;
+static float lastMotion = 0;
+static bool lastPresence = false;
 
 void wifiRadarRequestReset() { resetRequested = true; }
+void wifiRadarSetMute(bool mute) { peripheralsSetMute(mute); }
 
 static void clearCredentials() {
   prefs.begin("wfradar", false);
-  prefs.clear();
+  prefs.remove("ssid");
+  prefs.remove("pass");
   prefs.end();
   Serial.println("Wi-Fi credentials cleared");
 }
@@ -123,8 +129,10 @@ void setup() {
   Serial.begin(115200);
   delay(200);
   Serial.println();
-  Serial.println("Wi-Fi Radar");
+  Serial.println("Wi-Fi Radar 1.1.0");
   pinMode(kBootPin, INPUT_PULLUP);
+  // Display / PIR / buzzer: no network calls. Safe if the hardware is absent.
+  peripheralsBegin();
 
   if (!LittleFS.begin(false, "/littlefs", 10, "spiffs")) {
     Serial.println("LittleFS mount failed (web files missing?)");
@@ -178,13 +186,28 @@ void loop() {
   }
   httpWsLoop();
 
+  bool fresh = false;
+  RadarReading r{};
   if (staReady && millis() - lastSample >= kSampleMs) {
     lastSample = millis();
-    const RadarReading r = csiMotionRead();
-    char json[160];
+    r = csiMotionRead();
+    lastMotion = r.motion;
+    lastPresence = r.presence;
+    fresh = true;
+  }
+  peripheralsLoop(lastMotion, lastPresence, setupMode);
+  if (fresh) {
+    const bool pir = peripheralsPir();
+    const bool confirmed = peripheralsConfirmed(lastPresence);
+    const bool mute = peripheralsMuted();
+    char json[240];
     snprintf(json, sizeof(json),
-             "{\"t\":%lld,\"rssi\":%.1f,\"motion\":%.1f,\"presence\":%s}",
-             (long long)r.t, r.rssi, r.motion, r.presence ? "true" : "false");
+             "{\"t\":%lld,\"rssi\":%.1f,\"motion\":%.1f,\"presence\":%s,\"pir\":%s,\"confirmed\":%s,\"mute\":%s}",
+             (long long)r.t, r.rssi, r.motion,
+             lastPresence ? "true" : "false",
+             pir ? "true" : "false",
+             confirmed ? "true" : "false",
+             mute ? "true" : "false");
     httpWsBroadcast(json);
   }
 }

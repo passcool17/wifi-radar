@@ -3,6 +3,7 @@
 #include <WiFi.h>
 #include <LittleFS.h>
 #include <SHA1Builder.h>
+#include <string.h>
 #include "mbedtls/base64.h"
 
 static const int kMaxClients = 6;
@@ -267,8 +268,26 @@ static void handleRequest(ClientSlot &s) {
   s.used = false;
 }
 
+extern void wifiRadarSetMute(bool mute);
+
+static void handleWsCommand(const char *msg) {
+  // Expected: {"cmd":"mute","v":true}  (whitespace tolerated)
+  if (!strstr(msg, "mute")) return;
+  const char *v = strstr(msg, "\"v\"");
+  if (!v) return;
+  const char *colon = strchr(v, ':');
+  if (!colon) return;
+  const char *p = colon + 1;
+  while (*p == ' ' || *p == '\t') p++;
+  if (strncmp(p, "true", 4) == 0 || *p == '1') {
+    wifiRadarSetMute(true);
+  } else if (strncmp(p, "false", 5) == 0 || *p == '0') {
+    wifiRadarSetMute(false);
+  }
+}
+
 static void consumeWsFrame(ClientSlot &s) {
-  // Drain and reply to ping/close so the socket stays healthy. App traffic is server-push only.
+  // Drain ping/close, and handle a short text command (mute).
   WiFiClient &c = s.client;
   if (c.available() < 2) return;
   const uint8_t b0 = c.read();
@@ -282,31 +301,36 @@ static void consumeWsFrame(ClientSlot &s) {
     for (int i = 0; i < 8; i++) {
       if (c.available()) c.read();
     }
-    // oversized, close
     s.client.stop();
     s.used = false;
     return;
   }
   uint8_t mask[4] = {0, 0, 0, 0};
-  if (b1 & 0x80) {
+  const bool masked = (b1 & 0x80) != 0;
+  if (masked) {
     for (int i = 0; i < 4; i++) {
       while (!c.available() && c.connected()) delay(1);
       mask[i] = c.read();
     }
   }
+  char payload[96];
+  const uint64_t keep = len < sizeof(payload) - 1 ? len : sizeof(payload) - 1;
   for (uint64_t i = 0; i < len; i++) {
     while (!c.available() && c.connected()) delay(1);
-    c.read();  // discard payload (masked or not)
+    uint8_t b = c.read();
+    if (masked) b ^= mask[i % 4];
+    if (i < keep) payload[i] = (char)b;
   }
+  payload[keep] = 0;
   if (opcode == 0x8) {
     s.client.stop();
     s.used = false;
   } else if (opcode == 0x9) {
-    // pong
     uint8_t pong[2] = {0x8A, 0x00};
     c.write(pong, 2);
+  } else if (opcode == 0x1) {
+    handleWsCommand(payload);
   }
-  (void)mask;
 }
 
 static void sendWsText(WiFiClient &c, const char *json) {
