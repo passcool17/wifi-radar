@@ -1,0 +1,7 @@
+node_modules/
+.DS_Store
+*.log
+firmware/WifiRadar/build/
+firmware/build-out/
+.vscode/
+firmware/data/

@@ -1,0 +1,13 @@
+{
+  "name": "wifi-radar",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/samples.test.mjs && node tests/simulator.test.mjs",
+    "test:ui": "node tests/ui.e2e.mjs",
+    "test:all": "npm test && npm run test:ui"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.55.0"
+  }
+}

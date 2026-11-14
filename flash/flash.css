@@ -1,0 +1,94 @@
+:root {
+  --bg: #05070a;
+  --ink: #e7f3ec;
+  --dim: #9bb5a6;
+  --mute: #6c8578;
+  --line: rgba(120, 200, 160, 0.16);
+  --phosphor: #5ee8a0;
+  --deep: #146b42;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  background:
+    radial-gradient(900px 500px at 10% -10%, rgba(20, 70, 48, 0.35), transparent 55%),
+    var(--bg);
+  color: var(--ink);
+  font-family: system-ui, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+.page {
+  width: min(44rem, 100%);
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+.eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+h1 {
+  margin: 0.3rem 0 0.75rem;
+  font-size: 1.8rem;
+  letter-spacing: -0.03em;
+}
+.lead, .hint, li p { color: var(--dim); }
+.install {
+  margin: 1.4rem 0;
+  padding: 1.1rem 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+esp-web-install-button {
+  --esp-tools-button-color: #146b42;
+  --esp-tools-button-text-color: #f4fff8;
+  --esp-tools-button-border-radius: 8px;
+}
+.install-btn,
+button[slot="activate"] {
+  min-height: 48px;
+  padding: 0 1.2rem;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #2a9a62, #146b42);
+  color: #f4fff8;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.install-btn:focus-visible,
+a:focus-visible,
+pre:focus-visible {
+  outline: 2px solid var(--phosphor);
+  outline-offset: 3px;
+}
+.hint { font-size: 0.9rem; margin: 0.7rem 0 0; }
+.steps {
+  margin: 1.4rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+.steps h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+}
+pre {
+  margin: 0.45rem 0;
+  padding: 0.7rem 0.8rem;
+  background: #0a1114;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow-x: auto;
+  color: var(--phosphor);
+  font-size: 0.92rem;
+}
+code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+a { color: var(--phosphor); }
+.back { margin-top: 2rem; }

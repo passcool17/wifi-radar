@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#05070a" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="Radar de présence et de mouvement par Wi-Fi CSI." />
+    <title>Wi-Fi Radar</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="top">
+        <div class="brand">
+          <p class="eyebrow">Capteur CSI</p>
+          <h1>Wi-Fi Radar</h1>
+        </div>
+        <button type="button" class="icon-btn" id="btn-settings" aria-label="Ouvrir les réglages">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 3.5v2.1M12 18.4v2.1M3.5 12h2.1M18.4 12h2.1M6 6l1.5 1.5M16.5 16.5 18 18M6 18l1.5-1.5M16.5 7.5 18 6"></path>
+          </svg>
+        </button>
+      </header>
+
+      <div class="toolbar">
+        <div class="toggle" role="radiogroup" aria-label="Source des données">
+          <button type="button" role="radio" aria-checked="true" id="src-sim" class="is-on">Simulé</button>
+          <button type="button" role="radio" aria-checked="false" id="src-esp">ESP32</button>
+        </div>
+        <p class="status" id="src-status" role="status">Simulation en cours</p>
+      </div>
+
+      <section class="radar-panel" aria-label="Écran radar">
+        <div class="radar-frame">
+          <canvas id="radar" width="412" height="412" role="img" aria-label="Balayage radar en direct"></canvas>
+        </div>
+        <button type="button" id="btn-pause" aria-pressed="false">Pause le balayage</button>
+      </section>
+
+      <section class="readout" aria-label="Mesures">
+        <article id="presence-block" class="stat is-no">
+          <h2>Présence</h2>
+          <p class="value">
+            <span class="dot" id="presence-dot"></span>
+            <span id="presence-text">non</span>
+          </p>
+          <p class="sub" id="rssi">Signal — dBm</p>
+        </article>
+        <article class="stat">
+          <h2>Mouvement</h2>
+          <p class="value mono" id="motion-value">0</p>
+          <div
+            class="gauge"
+            id="gauge"
+            role="meter"
+            aria-label="Niveau de mouvement"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
+          >
+            <div class="gauge-track">
+              <div class="gauge-fill" id="gauge-fill"></div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="graph-panel">
+        <h2>Intensité — 60 dernières secondes</h2>
+        <canvas id="graph" width="800" height="200" role="img" aria-label="Graphique d’intensité du mouvement"></canvas>
+      </section>
+
+      <section class="log-panel">
+        <h2>Journal</h2>
+        <ol id="log"></ol>
+      </section>
+    </div>
+
+    <dialog id="settings" aria-labelledby="settings-title">
+      <div class="sheet">
+        <h2 id="settings-title">Réglages</h2>
+        <label>
+          Adresse IP de l’ESP32
+          <input
+            type="text"
+            id="set-ip"
+            inputmode="decimal"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            placeholder="192.168.1.50"
+          />
+        </label>
+        <label>
+          Port
+          <input type="text" id="set-port" inputmode="numeric" autocomplete="off" placeholder="80" maxlength="5" />
+        </label>
+        <p class="preview mono" id="ws-preview">ws://…/ws</p>
+        <button type="button" class="primary" id="btn-connect">Connecter l’ESP32</button>
+        <p class="status" id="conn-status" role="status">Déconnecté</p>
+        <p class="note" id="mixed-note" hidden>
+          Cette page est servie en HTTPS. Les navigateurs bloquent une connexion non sécurisée
+          (ws://) vers une adresse du réseau local : c’est le « contenu mixte ». Pour relier
+          l’ESP32, ouvrez l’app depuis un serveur HTTP sur le réseau, ou faites servir une copie
+          de l’app par l’ESP32 lui-même (voir le fichier README).
+        </p>
+        <p class="note" id="flash-link">
+          Pour installer le microprogramme, ouvrez
+          <a href="./flash/">la page d’installation</a>
+          depuis un ordinateur, avec Chrome ou Edge.
+        </p>
+        <button type="button" class="ghost" id="reset-wifi" hidden>Reconfigurer le Wi-Fi</button>
+        <button type="button" class="ghost" id="btn-close-settings">Fermer</button>
+      </div>
+    </dialog>
+
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>

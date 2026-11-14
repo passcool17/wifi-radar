@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#05070a" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="Installer Wi-Fi Radar sur un ESP32-WROOM-32 depuis Chrome, sur ordinateur." />
+    <title>Installer Wi-Fi Radar</title>
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./flash.css" />
+    <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+  </head>
+  <body>
+    <main class="page">
+      <p class="eyebrow">ESP32-WROOM-32 · DevKit USB-C (CH340)</p>
+      <h1>Installer Wi-Fi Radar</h1>
+      <p class="lead">
+        Cette page installe le microprogramme sur votre carte, depuis un ordinateur Ubuntu,
+        avec Chrome ou Edge. Elle a besoin d’un câble USB-C qui transporte les données
+        (pas seulement la charge). L’installation n’a pas encore été essayée sur une vraie carte :
+        le microprogramme a seulement été compilé.
+      </p>
+
+      <section class="install" aria-label="Installation">
+        <esp-web-install-button manifest="./manifest.json">
+          <button slot="activate" type="button" class="install-btn">Installer le microprogramme</button>
+        </esp-web-install-button>
+        <p class="hint" id="browser-hint">
+          Utilisez Chrome ou Edge sur l’ordinateur. Le bouton ne fonctionne pas dans Firefox
+          ni sur le téléphone.
+        </p>
+      </section>
+
+      <ol class="steps">
+        <li>
+          <h2>1. Sur l’ordinateur Ubuntu</h2>
+          <p>Ouvrez cette page dans <strong>Google Chrome</strong> (ou Microsoft Edge).</p>
+        </li>
+        <li>
+          <h2>2. Droits série (une seule fois)</h2>
+          <p>Dans un terminal :</p>
+          <pre><code>sudo usermod -a -G dialout $USER</code></pre>
+          <p>Fermez la session puis reconnectez-vous (ou redémarrez) pour que le groupe s’applique.</p>
+          <p>
+            Si le port n’apparaît pas et que vous avez le paquet <strong>brltty</strong>, il peut
+            s’emparer de la puce CH340. Retirez-le seulement si vous n’utilisez pas de plage braille :
+          </p>
+          <pre><code>sudo apt remove brltty</code></pre>
+        </li>
+        <li>
+          <h2>3. Brancher la carte</h2>
+          <p>
+            Branchez l’ESP32 au PC avec le câble USB-C. Dans la liste des ports, choisissez
+            celui qui ressemble à <code>ttyUSB0</code> ou mentionne <strong>CH340</strong>.
+          </p>
+        </li>
+        <li>
+          <h2>4. Lancer l’installation</h2>
+          <p>
+            Cliquez sur <strong>Installer le microprogramme</strong>, choisissez le port, puis
+            confirmez. Si la connexion échoue, maintenez le bouton <strong>BOOT</strong> enfoncé
+            et réessayez.
+          </p>
+        </li>
+        <li>
+          <h2>5. Configurer le Wi-Fi du salon</h2>
+          <p>
+            Avec le téléphone, rejoignez le réseau <strong>WiFi-Radar-Setup</strong>. Une page
+            de configuration devrait s’ouvrir ; sinon allez à
+            <a href="http://192.168.4.1/setup">http://192.168.4.1/setup</a>.
+            Entrez le nom et le mot de passe de votre Wi-Fi. Ils restent dans la carte,
+            ils ne sont pas envoyés ici.
+          </p>
+        </li>
+        <li>
+          <h2>6. Ouvrir le radar</h2>
+          <p>
+            Revenez sur votre Wi-Fi habituel, puis ouvrez
+            <a href="http://wifi-radar.local">http://wifi-radar.local</a>
+            ou l’adresse IP indiquée dans le moniteur série (115200 bauds).
+            L’app se connecte alors toute seule au capteur.
+          </p>
+        </li>
+      </ol>
+
+      <p class="back"><a href="../">Retour à l’app (mode simulé)</a></p>
+    </main>
+  </body>
+</html>
